@@ -4,9 +4,13 @@ use strict;
 use warnings;
 
 our $VERSION = '0.04';
+our $msg_PAGE_NOT_FOUND = 404;
+our $indexfile='index.html';
+
 use parent qw(Plack::App::File);
 use Plack::App::Proxy;
 use Plack::Util::Accessor qw/backend/;
+
 
 sub prepare_app {
 	my ($self) = @_;
@@ -17,7 +21,7 @@ sub call {
 	my ($self, $env) = @_;
 
 	my $res = $self->SUPER::call($env);
-	if ($res->[0] != 404) {
+	if ($res->[0] != $msg_PAGE_NOT_FOUND ) {
 		$res;
 	} else {
 		$env->{'plack.proxy.url'} = $env->{REQUEST_URI};
@@ -29,7 +33,7 @@ sub locate_file {
 	my ($self, $env) = @_;
 
 	my $req;
-	if ($env->{REQUEST_URI} =~ /^http/) {
+	if ($env->{REQUEST_URI} =~ /^http/i) {
 		$req = URI->new($env->{REQUEST_URI});
 		$env->{PATH_INFO} = $req->path;
 	} else {
@@ -44,8 +48,8 @@ sub locate_file {
 	$path =~ s{^/}{};
 	$base =~ s{^.*/}{};
 
-	$path ||= 'index.html';
-	$base ||= 'index.html';
+	$path ||= $indexfile;
+	$base ||= $indexfile;
 
 	my @paths = (
 		$base,
@@ -66,7 +70,7 @@ sub locate_file {
 		}
 	}
 
-	$self->return_404;
+	$self->return_404; #superclass 
 }
 
 1;
